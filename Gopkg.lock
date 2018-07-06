@@ -8,10 +8,73 @@
   version = "v0.3.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/aead/chacha20"
+  packages = [
+    ".",
+    "chacha"
+  ]
+  revision = "e2538746bfea853aaa589feb8ec46bd46ee78f86"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/bifurcation/mint"
+  packages = [
+    ".",
+    "syntax"
+  ]
+  revision = "198357931e6129b810c9c77c12e0dd754846170c"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/cheekybits/genny"
+  packages = ["generic"]
+  revision = "9127e812e1e9e501ce899a18121d316ecb52e4ba"
+
+[[projects]]
   name = "github.com/gorilla/handlers"
   packages = ["."]
   revision = "90663712d74cb411cbef281bc1e08c19d1a76145"
   version = "v1.3.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/golang-lru"
+  packages = [
+    ".",
+    "simplelru"
+  ]
+  revision = "0fb14efe8c47ae851c0034ed7a448854d3d34cf3"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/lucas-clemente/aes12"
+  packages = ["."]
+  revision = "cd47fb39b79f867c6e4e5cd39cf7abd799f71670"
+
+[[projects]]
+  name = "github.com/lucas-clemente/quic-go"
+  packages = [
+    ".",
+    "h2quic",
+    "internal/ackhandler",
+    "internal/congestion",
+    "internal/crypto",
+    "internal/flowcontrol",
+    "internal/handshake",
+    "internal/protocol",
+    "internal/utils",
+    "internal/wire",
+    "qerr"
+  ]
+  revision = "deffae864a3363cf4cd4a0030fc8106e16ec5723"
+  version = "v0.8.0"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/lucas-clemente/quic-go-certificates"
+  packages = ["."]
+  revision = "d2f86524cced5186554df90d92529757d22c1cb6"
 
 [[projects]]
   name = "github.com/m13253/dns-over-https"
@@ -29,8 +92,10 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
+    "curve25519",
     "ed25519",
-    "ed25519/internal/edwards25519"
+    "ed25519/internal/edwards25519",
+    "hkdf"
   ]
   revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
 
@@ -49,6 +114,12 @@
     "ipv6"
   ]
   revision = "ed29d75add3d7c4bf7ca65aac0c6df3d1420216f"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["cpu"]
+  revision = "151529c776cdc58ddbe7963ba9af779f3577b419"
 
 [[projects]]
   name = "golang.org/x/text"
@@ -74,6 +145,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "160d183a53c4e13fc9f95d1b34047788b41b206a87af193e246b890867194cb5"
+  inputs-digest = "a0e1f8e306d1c19f0cebe8648898be22d42863b9155bc4e598b4a80cce305d50"
   solver-name = "gps-cdcl"
   solver-version = 1

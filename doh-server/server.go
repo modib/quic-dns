@@ -34,6 +34,7 @@ import (
 	"time"
 
 	"github.com/gorilla/handlers"
+	"github.com/lucas-clemente/quic-go/h2quic"
 	"github.com/m13253/dns-over-https/json-dns"
 	"github.com/miekg/dns"
 )
@@ -92,6 +93,17 @@ func (s *Server) Start() error {
 			results <- err
 		}(addr)
 	}
+	go func() {
+		println("Staring QUIC")
+		// TODO(mpl): reorganize
+		_ = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintf(w, "hello, you've hit %s\n", r.URL.Path)
+		})
+		err := h2quic.ListenAndServeQUIC("0.0.0.0:4242", s.conf.Cert, s.conf.Key, servemux)
+		if err != nil {
+			results <- err
+		}
+	}()
 	// wait for all handlers
 	for i := 0; i < cap(results); i++ {
 		err := <-results

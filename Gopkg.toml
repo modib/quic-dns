@@ -24,6 +24,7 @@
 #   go-tests = true
 #   unused-packages = true
 
+# ignored = ["github.com/cloudflare/tls-tris"]
 
 [[constraint]]
   name = "github.com/BurntSushi/toml"
@@ -48,3 +49,17 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/lucas-clemente/quic-go"
+  version = "0.8.0"
+
+# [[constraint]]
+#   version = "Release_1.10_2"
+#   name = "github.com/cloudflare/tls-tris"
+#   # source = "https://github.com/cloudflare/tls-tris.git"
+
+# [[override]]
+#   version = "Release_1.10_2"
+#   name = "crypto/tls"
+#   source = "https://github.com/cloudflare/tls-tris.git"

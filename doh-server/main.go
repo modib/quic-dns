@@ -29,6 +29,7 @@ import (
 )
 
 func main() {
+	log.Println("Starting")
 	confPath := flag.String("conf", "doh-server.conf", "Configuration file")
 	verbose := flag.Bool("verbose", false, "Enable logging")
 	flag.Parse()
@@ -43,5 +44,8 @@ func main() {
 	}
 
 	server := NewServer(conf)
-	_ = server.Start()
+	err = server.Start()
+	if err != nil {
+		log.Fatalf("Can't start server: %v", err)
+	}
 }
