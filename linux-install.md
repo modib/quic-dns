@@ -32,7 +32,7 @@ Clone this repo
 
 
 ```bash
-git clone https://github.com/m13253/dns-over-https.git
+git clone https://github.com/ProfitLabs/quic-dns.git
 ```
 
 Change directory to the cloned repo

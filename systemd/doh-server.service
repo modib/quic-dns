@@ -1,6 +1,6 @@
 [Unit]
 Description=DNS-over-HTTPS Server
-Documentation=https://github.com/m13253/dns-over-https
+Documentation=https://github.com/ProfitLabs/quic-dns
 After=network.target
 
 [Service]

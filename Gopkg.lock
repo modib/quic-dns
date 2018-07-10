@@ -77,12 +77,6 @@
   revision = "d2f86524cced5186554df90d92529757d22c1cb6"
 
 [[projects]]
-  name = "github.com/m13253/dns-over-https"
-  packages = ["json-dns"]
-  revision = "51b065eed71f0cb0a7dd7c2e580e6997016b7678"
-  version = "v1.3.6"
-
-[[projects]]
   name = "github.com/miekg/dns"
   packages = ["."]
   revision = "5a2b9fab83ff0f8bfc99684bd5f43a37abe560f1"
@@ -145,6 +139,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a0e1f8e306d1c19f0cebe8648898be22d42863b9155bc4e598b4a80cce305d50"
+  inputs-digest = "99f9b9b3b729ffcc2e723b80c1e78b6c18bbe2fd081e4ed0260cf5a15501be70"
   solver-name = "gps-cdcl"
   solver-version = 1

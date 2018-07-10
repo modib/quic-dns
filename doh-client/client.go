@@ -34,7 +34,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/m13253/dns-over-https/json-dns"
+	"github.com/ProfitLabs/quic-dns/json-dns"
 	"github.com/miekg/dns"
 	"golang.org/x/net/http2"
 )
