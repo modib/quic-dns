@@ -33,9 +33,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ProfitLabs/quic-dns/json-dns"
 	"github.com/gorilla/handlers"
 	"github.com/lucas-clemente/quic-go/h2quic"
-	"github.com/ProfitLabs/quic-dns/json-dns"
 	"github.com/miekg/dns"
 )
 
@@ -83,8 +83,10 @@ func (s *Server) Start() error {
 		go func(addr string) {
 			var err error
 			if s.conf.Cert != "" || s.conf.Key != "" {
-				err = http.ListenAndServeTLS(addr, s.conf.Cert, s.conf.Key, servemux)
+				log.Printf("Starting QUIC + HTTPS at %s", addr)
+				err = h2quic.ListenAndServe(addr, s.conf.Cert, s.conf.Key, servemux)
 			} else {
+				log.Printf("Starting HTTP at %s", addr)
 				err = http.ListenAndServe(addr, servemux)
 			}
 			if err != nil {
@@ -93,17 +95,6 @@ func (s *Server) Start() error {
 			results <- err
 		}(addr)
 	}
-	go func() {
-		println("Staring QUIC")
-		// TODO(mpl): reorganize
-		_ = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintf(w, "hello, you've hit %s\n", r.URL.Path)
-		})
-		err := h2quic.ListenAndServeQUIC("0.0.0.0:4242", s.conf.Cert, s.conf.Key, servemux)
-		if err != nil {
-			results <- err
-		}
-	}()
 	// wait for all handlers
 	for i := 0; i < cap(results); i++ {
 		err := <-results
