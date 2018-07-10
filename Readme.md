@@ -1,5 +1,11 @@
-DNS-over-HTTPS
-==============
+QUIC-DNS
+========
+
+Client probably don't work.
+
+Please look to [sample-client/main.go](sample-client/main.go).
+
+--------
 
 Client and server software to query DNS over HTTPS, using [Google DNS-over-HTTPS protocol](https://developers.google.com/speed/public-dns/docs/dns-over-https)
 and [draft-ietf-doh-dns-over-https](https://github.com/dohwg/draft-ietf-doh-dns-over-https).

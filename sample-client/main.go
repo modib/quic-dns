@@ -33,7 +33,7 @@ func main() {
 
 func googleReqResp(client *http.Client, name string) {
 	fmt.Println("\n\n=====================\ngoogleReqResp\n=====================")
-	addr := "https://localhost:4242/dns-query?name=" + name
+	addr := "https://localhost:8053/dns-query?name=" + name
 	log.Printf("GET %s", addr)
 	req, err := http.NewRequest("GET", addr, nil)
 	if err != nil {
@@ -56,7 +56,7 @@ func googleReqResp(client *http.Client, name string) {
 
 func googleReqIETFResp(client *http.Client, name string) {
 	fmt.Println("\n\n=====================\ngoogleReqIETFResp\n=====================")
-	addr := "https://localhost:4242/dns-query?name=yandex.ru"
+	addr := "https://localhost:8053/dns-query?name=yandex.ru"
 	log.Printf("GET %s", addr)
 
 	req, err := http.NewRequest("GET", addr, nil)
@@ -93,7 +93,7 @@ func ietfGetReqResp(client *http.Client, name string) {
 	dnsQuestion := new(dns.Msg)
 	dnsQuestion.SetQuestion(dns.Fqdn(name), dns.TypeA)
 	questionBody, err := dnsQuestion.Pack()
-	addr := "https://localhost:4242/dns-query?dns=" + base64.RawURLEncoding.EncodeToString(questionBody)
+	addr := "https://localhost:8053/dns-query?dns=" + base64.RawURLEncoding.EncodeToString(questionBody)
 	log.Printf("GET %s", addr)
 
 	req, err := http.NewRequest("GET", addr, nil)
@@ -130,7 +130,7 @@ func ietfPostReqResp(client *http.Client, name string) {
 	dnsQuestion := new(dns.Msg)
 	dnsQuestion.SetQuestion(dns.Fqdn(name), dns.TypeA)
 	questionBody, err := dnsQuestion.Pack()
-	addr := "https://localhost:4242/dns-query"
+	addr := "https://localhost:8053/dns-query"
 	log.Printf("POST %s", addr)
 	reader := bytes.NewBuffer(questionBody)
 	req, err := http.NewRequest("POST", addr, reader)
