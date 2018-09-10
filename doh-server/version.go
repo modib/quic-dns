@@ -24,6 +24,6 @@
 package main
 
 const (
-	VERSION    = "1.3.8"
+	VERSION    = "1.3.11"
 	USER_AGENT = "DNS-over-QUIC/" + VERSION + " (+https://github.com/ProfitLabs/quic-dns)"
 )

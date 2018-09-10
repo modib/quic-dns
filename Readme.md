@@ -14,6 +14,8 @@ and [draft-ietf-doh-dns-over-https](https://github.com/dohwg/draft-ietf-doh-dns-
 
 Install [Go](https://golang.org), at least version 1.9.
 
+(Note for Debian/Ubuntu users: You need to set `$GOROOT` if you could not get your new version of Go selected by the Makefile.)
+
 First create an empty directory, used for `$GOPATH`:
 
     mkdir ~/gopath
@@ -89,7 +91,7 @@ records.
 ## EDNS0-Client-Subnet (GeoDNS)
 
 DNS-over-HTTPS supports EDNS0-Client-Subnet protocol, which submits part of the
-client's IP address (/24 for IPv4, /48 for IPv6 by default) to the upstream
+client's IP address (/24 for IPv4, /56 for IPv6 by default) to the upstream
 server. This is useful for GeoDNS and CDNs to work, and is exactly the same
 configuration as most public DNS servers.
 
@@ -125,7 +127,7 @@ Currently supported features are:
 
 - [X] IPv4 / IPv6
 - [X] EDNS0 large UDP packet (4 KiB by default)
-- [X] EDNS0-Client-Subnet (/24 for IPv4, /48 for IPv6 by default)
+- [X] EDNS0-Client-Subnet (/24 for IPv4, /56 for IPv6 by default)
 
 ## The name of the project
 

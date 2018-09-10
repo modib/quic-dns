@@ -46,7 +46,6 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 			errtext: "Invalid argument value: \"name\"",
 		}
 	}
-	name = strings.ToLower(name)
 	if punycode, err := idna.ToASCII(name); err == nil {
 		name = punycode
 	} else {
@@ -105,7 +104,7 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 				ednsClientNetmask = 24
 			} else {
 				ednsClientFamily = 2
-				ednsClientNetmask = 48
+				ednsClientNetmask = 56
 			}
 		} else {
 			ednsClientAddress = net.ParseIP(ednsClientSubnet[:slash])
@@ -140,7 +139,7 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 			ednsClientNetmask = 24
 		} else {
 			ednsClientFamily = 2
-			ednsClientNetmask = 48
+			ednsClientNetmask = 56
 		}
 	}
 
@@ -182,6 +181,7 @@ func (s *Server) generateResponseGoogle(w http.ResponseWriter, r *http.Request, 
 	now := time.Now().UTC().Format(http.TimeFormat)
 	w.Header().Set("Date", now)
 	w.Header().Set("Last-Modified", now)
+	w.Header().Set("Vary", "Accept")
 	if respJSON.HaveTTL {
 		if req.isTailored {
 			w.Header().Set("Cache-Control", "private, max-age="+strconv.Itoa(int(respJSON.LeastTTL)))

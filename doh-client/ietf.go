@@ -53,8 +53,7 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 	}
 
 	question := &r.Question[0]
-	// knot-resolver scrambles capitalization, I think it is unfriendly to cache
-	questionName := strings.ToLower(question.Name)
+	questionName := question.Name
 	questionType := ""
 	if qtype, ok := dns.TypeToString[question.Qtype]; ok {
 		questionType = qtype
@@ -97,7 +96,7 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 				ednsClientNetmask = 24
 			} else {
 				ednsClientFamily = 2
-				ednsClientNetmask = 48
+				ednsClientNetmask = 56
 			}
 			edns0Subnet = new(dns.EDNS0_SUBNET)
 			edns0Subnet.Code = dns.EDNS0SUBNET
@@ -127,8 +126,7 @@ func (c *Client) generateRequestIETF(w dns.ResponseWriter, r *dns.Msg, isTCP boo
 
 	numServers := len(c.conf.UpstreamIETF)
 	upstream := c.conf.UpstreamIETF[rand.Intn(numServers)]
-	requestURL := fmt.Sprintf("%s?ct=application/dns-udpwireformat&dns=%s", upstream, requestBase64)
-	//requestURL := fmt.Sprintf("%s?ct=application/dns-message&dns=%s", upstream, requestBase64)
+	requestURL := fmt.Sprintf("%s?ct=application/dns-message&dns=%s", upstream, requestBase64)
 
 	var req *http.Request
 	if len(requestURL) < 2048 {

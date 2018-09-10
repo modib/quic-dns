@@ -31,6 +31,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ProfitLabs/quic-dns/json-dns"
@@ -62,7 +63,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 		}
 	}
 
-	if s.patchDNSCryptProxyReqID(requestBinary, w) {
+	if s.patchDNSCryptProxyReqID(w, r, requestBinary) {
 		return &DNSRequest{
 			errcode: 444,
 		}
@@ -95,6 +96,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 		fmt.Printf("%s - - [%s] \"%s %s %s\"\n", r.RemoteAddr, time.Now().Format("02/Jan/2006:15:04:05 -0700"), questionName, questionClass, questionType)
 	}
 
+	transactionID := msg.Id
 	msg.Id = dns.Id()
 	opt := msg.IsEdns0()
 	if opt == nil {
@@ -124,7 +126,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 				ednsClientNetmask = 24
 			} else {
 				ednsClientFamily = 2
-				ednsClientNetmask = 48
+				ednsClientNetmask = 56
 			}
 			edns0Subnet = new(dns.EDNS0_SUBNET)
 			edns0Subnet.Code = dns.EDNS0SUBNET
@@ -137,14 +139,15 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 	}
 
 	return &DNSRequest{
-		request:    msg,
-		isTailored: isTailored,
+		request:       msg,
+		transactionID: transactionID,
+		isTailored:    isTailored,
 	}
 }
 
 func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, req *DNSRequest) {
 	respJSON := jsonDNS.Marshal(req.response)
-	req.response.Id = 0
+	req.response.Id = req.transactionID
 	respBytes, err := req.response.Pack()
 	if err != nil {
 		log.Println(err)
@@ -156,6 +159,10 @@ func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, re
 	now := time.Now().UTC().Format(http.TimeFormat)
 	w.Header().Set("Date", now)
 	w.Header().Set("Last-Modified", now)
+	w.Header().Set("Vary", "Accept")
+
+	_ = s.patchFirefoxContentType(w, r, req)
+
 	if respJSON.HaveTTL {
 		if req.isTailored {
 			w.Header().Set("Cache-Control", "private, max-age="+strconv.Itoa(int(respJSON.LeastTTL)))
@@ -164,6 +171,7 @@ func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, re
 		}
 		w.Header().Set("Expires", respJSON.EarliestExpires.Format(http.TimeFormat))
 	}
+
 	if respJSON.Status == dns.RcodeServerFailure {
 		w.WriteHeader(503)
 	}
@@ -171,13 +179,26 @@ func (s *Server) generateResponseIETF(w http.ResponseWriter, r *http.Request, re
 }
 
 // Workaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe
-func (s *Server) patchDNSCryptProxyReqID(requestBinary []byte, w http.ResponseWriter) bool {
-	if bytes.Equal(requestBinary, []byte("\xca\xfe\x01\x00\x00\x01\x00\x00\x00\x00\x00\x01\x00\x00\x02\x00\x01\x00\x00\x29\x10\x00\x00\x00\x80\x00\x00\x00")) {
+func (s *Server) patchDNSCryptProxyReqID(w http.ResponseWriter, r *http.Request, requestBinary []byte) bool {
+	if strings.Contains(r.UserAgent(), "dnscrypt-proxy") && bytes.Equal(requestBinary, []byte("\xca\xfe\x01\x00\x00\x01\x00\x00\x00\x00\x00\x01\x00\x00\x02\x00\x01\x00\x00\x29\x10\x00\x00\x00\x80\x00\x00\x00")) {
 		log.Println("DNSCrypt-Proxy detected. Patching response.")
 		w.Header().Set("Content-Type", "application/dns-message")
+		w.Header().Set("Vary", "Accept, User-Agent")
 		now := time.Now().UTC().Format(http.TimeFormat)
 		w.Header().Set("Date", now)
 		w.Write([]byte("\xca\xfe\x81\x05\x00\x01\x00\x01\x00\x00\x00\x00\x00\x00\x02\x00\x01\x00\x00\x10\x00\x01\x00\x00\x00\x00\x00\xa8\xa7\r\nWorkaround a bug causing DNSCrypt-Proxy to expect a response with TransactionID = 0xcafe\r\nRefer to https://github.com/jedisct1/dnscrypt-proxy/issues/526 for details."))
+		return true
+	}
+	return false
+}
+
+// Workaround a bug causing Firefox 61-62 to reject responses with Content-Type = application/dns-message
+func (s *Server) patchFirefoxContentType(w http.ResponseWriter, r *http.Request, req *DNSRequest) bool {
+	if strings.Contains(r.UserAgent(), "Firefox") && strings.Contains(r.Header.Get("Accept"), "application/dns-udpwireformat") && !strings.Contains(r.Header.Get("Accept"), "application/dns-message") {
+		log.Println("Firefox 61-62 detected. Patching response.")
+		w.Header().Set("Content-Type", "application/dns-udpwireformat")
+		w.Header().Set("Vary", "Accept, User-Agent")
+		req.isTailored = true
 		return true
 	}
 	return false

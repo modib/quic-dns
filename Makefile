@@ -1,11 +1,26 @@
 .PHONY: all clean install uninstall
 
+<<<<<<< HEAD
 GOBUILD=go build
 PREFIX=/usr/local
-ifeq ($(shell uname),Darwin)
-	CONFDIR=/usr/local/etc/dns-over-https
+=======
+PREFIX = /usr/local
+
+ifeq ($(GOROOT),)
+GOBUILD = go build
+GOGET = go get -d -v
+GOGET_UPDATE = go get -d -u -v
 else
-	CONFDIR=/etc/dns-over-https
+GOBUILD = $(GOROOT)/bin/go build
+GOGET = $(GOROOT)/bin/go get -d -v
+GOGET_UPDATE = $(GOROOT)/bin/go get -d -u -v
+endif
+
+>>>>>>> ea0a769389f177fb7279cbf2b434c781cd17bb05
+ifeq ($(shell uname),Darwin)
+CONFDIR = /usr/local/etc/dns-over-https
+else
+CONFDIR = /etc/dns-over-https
 endif
 
 all: doh-client/doh-client doh-server/doh-server
