@@ -9,6 +9,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/CossackPyra/pyraconv"
+  packages = ["."]
+  revision = "7dca3cfe0c8acbcd65b05d37d115ac369fc2da1d"
+
+[[projects]]
+  branch = "master"
   name = "github.com/aead/chacha20"
   packages = [
     ".",
@@ -30,6 +36,18 @@
   name = "github.com/cheekybits/genny"
   packages = ["generic"]
   revision = "9127e812e1e9e501ce899a18121d316ecb52e4ba"
+
+[[projects]]
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
+  version = "v3.2.0"
+
+[[projects]]
+  name = "github.com/google/uuid"
+  packages = ["."]
+  revision = "d460ce9f8df2e77fb1ba55ca87fafed96c607494"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/gorilla/handlers"
@@ -81,6 +99,40 @@
   packages = ["."]
   revision = "5a2b9fab83ff0f8bfc99684bd5f43a37abe560f1"
   version = "v1.0.8"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/vanderbr/logclient"
+  packages = [
+    "util",
+    "zaprequest"
+  ]
+  revision = "83818be16cabfd84b3d2ce0980f78f2dc6887d75"
+
+[[projects]]
+  name = "go.uber.org/atomic"
+  packages = ["."]
+  revision = "1ea20fb1cbb1cc08cbd0d913a96dead89aa18289"
+  version = "v1.3.2"
+
+[[projects]]
+  name = "go.uber.org/multierr"
+  packages = ["."]
+  revision = "3c4937480c32f4c13a875a1829af76c98ca3d40a"
+  version = "v1.1.0"
+
+[[projects]]
+  name = "go.uber.org/zap"
+  packages = [
+    ".",
+    "buffer",
+    "internal/bufferpool",
+    "internal/color",
+    "internal/exit",
+    "zapcore"
+  ]
+  revision = "ff33455a0e382e8a81d14dd7c922020b6b5e7982"
+  version = "v1.9.1"
 
 [[projects]]
   branch = "master"
@@ -139,6 +191,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "99f9b9b3b729ffcc2e723b80c1e78b6c18bbe2fd081e4ed0260cf5a15501be70"
+  inputs-digest = "2e91836f7cb668fec31b0d9e703baf97067bac2d446ade09be2dceeedca8a5a0"
   solver-name = "gps-cdcl"
   solver-version = 1

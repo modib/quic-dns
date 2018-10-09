@@ -33,7 +33,7 @@ func main() {
 
 func googleReqResp(client *http.Client, name string) {
 	fmt.Println("\n\n=====================\ngoogleReqResp\n=====================")
-	addr := "https://localhost:8053/dns-query?name=" + name
+	addr := "https://localhost.greenstats.com:8053/dns-query?name=" + name
 	log.Printf("GET %s", addr)
 	req, err := http.NewRequest("GET", addr, nil)
 	if err != nil {

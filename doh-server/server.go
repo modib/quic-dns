@@ -33,6 +33,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/CossackPyra/pyraconv"
 	"github.com/ProfitLabs/quic-dns/json-dns"
 	"github.com/gorilla/handlers"
 	"github.com/lucas-clemente/quic-go/h2quic"
@@ -77,6 +78,12 @@ func (s *Server) Start() error {
 	servemux := http.Handler(s.servemux)
 	if s.conf.Verbose {
 		servemux = handlers.CombinedLoggingHandler(os.Stdout, servemux)
+	}
+	if pyraconv.ToBool(os.Getenv("DNSAUTH")) == true {
+		fmt.Printf(" --== DNSAUTH true %s\n", os.Getenv("DNSAUTH"))
+		servemux = InitAuthHandler(servemux)
+	} else {
+		fmt.Printf(" --== DNSAUTH False %s\n", os.Getenv("DNSAUTH"))
 	}
 	results := make(chan error, len(s.conf.Listen))
 	for _, addr := range s.conf.Listen {
