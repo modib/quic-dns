@@ -44,6 +44,8 @@ type Server struct {
 	udpClient *dns.Client
 	tcpClient *dns.Client
 	servemux  *http.ServeMux
+	whitelist map[string]bool
+	blacklist map[string]bool
 }
 
 type DNSRequest struct {
@@ -68,13 +70,34 @@ func NewServer(conf *config) (s *Server) {
 			Net:     "tcp",
 			Timeout: time.Duration(conf.Timeout) * time.Second,
 		},
-		servemux: http.NewServeMux(),
+		servemux:  http.NewServeMux(),
+		whitelist: map[string]bool{},
+		blacklist: map[string]bool{},
 	}
 	s.servemux.HandleFunc(conf.Path, s.handlerFunc)
 	return
 }
 
 func (s *Server) Start() error {
+	if s.conf.Whitelist != "" {
+		whitelist, err := parseList(s.conf.Whitelist)
+		if err != nil {
+			return fmt.Errorf("Can't read whitelist: %v", err)
+		}
+		s.whitelist = whitelist
+	}
+
+	if s.conf.Blacklist != "" {
+		blacklist, err := parseList(s.conf.Blacklist)
+		if err != nil {
+			return fmt.Errorf("Can't read blacklist: %v", err)
+		}
+		s.blacklist = blacklist
+	}
+
+	log.Printf("Blacklist size: %v", len(s.blacklist))
+	log.Printf("Whitelist size: %v", len(s.whitelist))
+
 	servemux := http.Handler(s.servemux)
 	if s.conf.Verbose {
 		servemux = handlers.CombinedLoggingHandler(os.Stdout, servemux)
@@ -173,12 +196,20 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 
 	req = s.patchRootRD(req)
 
+	s.preLookup(req)
+	if req.errcode != 0 {
+		jsonDNS.FormatError(w, req.errtext, req.errcode)
+		return
+	}
+
 	var err error
 	req, err = s.doDNSQuery(req)
 	if err != nil {
 		jsonDNS.FormatError(w, fmt.Sprintf("DNS query failure (%s)", err.Error()), 503)
 		return
 	}
+
+	s.postLookup(req)
 
 	if responseType == "application/json" {
 		s.generateResponseGoogle(w, r, req)
