@@ -25,3 +25,7 @@
 [[constraint]]
   name = "github.com/lucas-clemente/quic-go"
   version = "^0.8.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/gocarina/gocsv"

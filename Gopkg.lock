@@ -32,6 +32,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/gocarina/gocsv"
+  packages = ["."]
+  revision = "b8c38cb1ba36857e7f9c1ef75c6e59e11ed93e37"
+
+[[projects]]
   name = "github.com/gorilla/handlers"
   packages = ["."]
   revision = "7e0847f9db758cdebd26c149d0ae9d5d0b9c98ce"
@@ -139,6 +145,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "99f9b9b3b729ffcc2e723b80c1e78b6c18bbe2fd081e4ed0260cf5a15501be70"
+  inputs-digest = "009890fc9f20525b9bf083cb8ac15f03d4338dd6ba7033eb4fbf85b5ee97093a"
   solver-name = "gps-cdcl"
   solver-version = 1
