@@ -29,3 +29,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/gocarina/gocsv"
+
+[[constraint]]
+  name = "github.com/gofrs/flock"
+  version = "0.7.0"
