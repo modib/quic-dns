@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 
 	"github.com/gocarina/gocsv"
@@ -18,6 +19,7 @@ import (
 
 func main() {
 	workDir := flag.String("wd", "", "path to working directory")
+	keepVersions := flag.Int("keep", 3, "keep N latest versions")
 	flag.Parse()
 	err := os.Chdir(*workDir)
 	if err != nil {
@@ -66,14 +68,38 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to rename blacklist: %v", err)
 	}
+
+	log.Print("Removing old files")
+	removeOld(*workDir, whitelistRE, *keepVersions)
+	removeOld(*workDir, blacklistRE, *keepVersions)
+	log.Print("Old files are removed")
+}
+
+func getFilenamesForRE(workDir string, selector *regexp.Regexp) ([]string, error) {
+	wd, err := os.Open(workDir)
+	if err != nil {
+		return nil, err
+	}
+	names, err := wd.Readdirnames(0)
+
+	filtered := []string{}
+
+	for _, name := range names {
+		match := selector.FindStringSubmatch(name)
+		if match == nil {
+			continue
+		}
+		filtered = append(filtered, name)
+	}
+
+	return filtered, nil
 }
 
 func maxNumberForRE(workDir string, selector *regexp.Regexp) (int, error) {
-	wd, err := os.Open(workDir)
+	names, err := getFilenamesForRE(workDir, selector)
 	if err != nil {
 		return 0, err
 	}
-	names, err := wd.Readdirnames(0)
 
 	maxFileNumber := -1
 
@@ -84,7 +110,7 @@ func maxNumberForRE(workDir string, selector *regexp.Regexp) (int, error) {
 		}
 		number, err := strconv.Atoi(match[1])
 		if err != nil {
-			log.Printf("Warning: unable to parse filename: %q", filename)
+			log.Printf("[Warning] Unable to parse filename: %q", filename)
 			continue
 		}
 		if maxFileNumber < number {
@@ -93,6 +119,38 @@ func maxNumberForRE(workDir string, selector *regexp.Regexp) (int, error) {
 	}
 
 	return maxFileNumber, nil
+}
+
+func removeOld(workDir string, selector *regexp.Regexp, keep int) {
+	names, err := getFilenamesForRE(workDir, selector)
+	if err != nil {
+		log.Printf("[Warning] Unable to take old files list: %v", err)
+	}
+
+	numberToFilename := map[int]string{}
+	numbers := []int{}
+	for _, filename := range names {
+		match := selector.FindStringSubmatch(filename)
+		if match == nil {
+			continue
+		}
+		number, err := strconv.Atoi(match[1])
+		if err != nil {
+			log.Printf("[Warning] Unable to parse filename: %q", filename)
+			continue
+		}
+		numbers = append(numbers, number)
+		numberToFilename[number] = filename
+	}
+
+	sort.Ints(numbers)
+	for i := 0; i < len(numbers)-keep; i++ {
+		filename := numberToFilename[numbers[i]]
+		err := os.Remove(filename)
+		if err != nil {
+			log.Printf("[Warning] Unable to remove old file %s: %v", filename, err)
+		}
+	}
 }
 
 func writeWhitelist() error {
