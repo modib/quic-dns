@@ -162,11 +162,10 @@ func writeWhitelist() error {
 	}
 	defer whiteFile.Close()
 
-	// majestic1M, err := majestic1MFetch()
-	// if err != nil {
-	// 	return err
-	// }
-	majestic1M := []string{}
+	majestic1M, err := majestic1MFetch()
+	if err != nil {
+		return err
+	}
 	log.Printf("Majestic domains count is %d", len(majestic1M))
 	for _, domain := range majestic1M {
 		_, err := fmt.Fprintln(whiteFile, domain)
@@ -287,18 +286,14 @@ func majestic1MFetch() ([]string, error) {
 		return nil, fmt.Errorf("Bad HTTP code %d", resp.StatusCode)
 	}
 
-	data := []MajesticEntry{}
-	err = gocsv.Unmarshal(resp.Body, &data)
-	if err != nil {
-		return nil, err
-	}
-
 	result := []string{}
-	for _, entry := range data {
-		result = append(result, entry.Domain)
-	}
-
-	return result, nil
+	err = gocsv.UnmarshalToCallback(resp.Body, func(entry MajesticEntry) {
+		// Optimization to reduce memory
+		domain := make([]byte, len(entry.Domain))
+		copy(domain, entry.Domain)
+		result = append(result, string(domain))
+	})
+	return result, err
 }
 
 func openPhishFetch() ([]string, error) {
