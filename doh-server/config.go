@@ -30,17 +30,17 @@ import (
 )
 
 type config struct {
-	Listen    []string `toml:"listen"`
-	Cert      string   `toml:"cert"`
-	Key       string   `toml:"key"`
-	Path      string   `toml:"path"`
-	Upstream  []string `toml:"upstream"`
-	Timeout   uint     `toml:"timeout"`
-	Tries     uint     `toml:"tries"`
-	TCPOnly   bool     `toml:"tcp_only"`
-	Verbose   bool     `toml:"verbose"`
-	Whitelist string   `toml:"whitelist"`
-	Blacklist string   `toml:"blacklist"`
+	Listen              []string `toml:"listen"`
+	Cert                string   `toml:"cert"`
+	Key                 string   `toml:"key"`
+	Path                string   `toml:"path"`
+	Upstream            []string `toml:"upstream"`
+	Timeout             uint     `toml:"timeout"`
+	Tries               uint     `toml:"tries"`
+	TCPOnly             bool     `toml:"tcp_only"`
+	Verbose             bool     `toml:"verbose"`
+	ListsDirectory      string   `toml:"lists_directory"`
+	ListsUpdateEndpoint string   `toml:"lists_update_endpoint"`
 }
 
 func loadConfig(path string) (*config, error) {
@@ -72,6 +72,10 @@ func loadConfig(path string) (*config, error) {
 
 	if (conf.Cert != "") != (conf.Key != "") {
 		return nil, &configError{"You must specify both -cert and -key to enable TLS"}
+	}
+
+	if conf.ListsUpdateEndpoint != "" {
+		conf.ListsUpdateEndpoint = "http://" + conf.ListsUpdateEndpoint
 	}
 
 	return conf, nil

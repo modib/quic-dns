@@ -20,6 +20,7 @@ import (
 func main() {
 	workDir := flag.String("wd", "", "path to working directory")
 	keepVersions := flag.Int("keep", 3, "keep N latest versions")
+	serverURL := flag.String("server-url", "", "server HTTP endpoint to update lists")
 	flag.Parse()
 	err := os.Chdir(*workDir)
 	if err != nil {
@@ -49,7 +50,7 @@ func main() {
 
 	////////////
 
-	whitelistRE, err := regexp.Compile("^whitelist\\.(\\d+)\\.txt$")
+	whitelistRE := regexp.MustCompile("^whitelist\\.(\\d+)\\.txt$")
 	maxWhitelistNumber, err := maxNumberForRE(*workDir, whitelistRE)
 	if err != nil {
 		log.Fatalf("Unable to find latest whitelist number: %v", err)
@@ -59,7 +60,7 @@ func main() {
 		log.Fatalf("Unable to rename whitelist: %v", err)
 	}
 
-	blacklistRE, err := regexp.Compile("^blacklist\\.(\\d+)\\.txt$")
+	blacklistRE := regexp.MustCompile("^blacklist\\.(\\d+)\\.txt$")
 	maxBlacklistNumber, err := maxNumberForRE(*workDir, blacklistRE)
 	if err != nil {
 		log.Fatalf("Unable to find latest blacklist number: %v", err)
@@ -73,30 +74,27 @@ func main() {
 	removeOld(*workDir, whitelistRE, *keepVersions)
 	removeOld(*workDir, blacklistRE, *keepVersions)
 	log.Print("Old files are removed")
-}
 
-func getFilenamesForRE(workDir string, selector *regexp.Regexp) ([]string, error) {
-	wd, err := os.Open(workDir)
-	if err != nil {
-		return nil, err
-	}
-	names, err := wd.Readdirnames(0)
-
-	filtered := []string{}
-
-	for _, name := range names {
-		match := selector.FindStringSubmatch(name)
-		if match == nil {
-			continue
+	///////
+	if *serverURL != "" {
+		resp, err := http.Post(*serverURL, "text/plain", nil)
+		if err != nil {
+			log.Fatalf("Unable to notify DOH-server: %v", err)
 		}
-		filtered = append(filtered, name)
-	}
 
-	return filtered, nil
+		resp.Body.Close()
+		if resp.StatusCode != 200 {
+			log.Fatalf("Unable to notify DOH-server: %s", resp.Status)
+		}
+	}
 }
 
 func maxNumberForRE(workDir string, selector *regexp.Regexp) (int, error) {
-	names, err := getFilenamesForRE(workDir, selector)
+	wd, err := os.Open(workDir)
+	if err != nil {
+		return 0, err
+	}
+	names, err := wd.Readdirnames(0)
 	if err != nil {
 		return 0, err
 	}
@@ -122,7 +120,11 @@ func maxNumberForRE(workDir string, selector *regexp.Regexp) (int, error) {
 }
 
 func removeOld(workDir string, selector *regexp.Regexp, keep int) {
-	names, err := getFilenamesForRE(workDir, selector)
+	wd, err := os.Open(workDir)
+	if err != nil {
+		log.Printf("[Warning] Unable to take old files list: %v", err)
+	}
+	names, err := wd.Readdirnames(0)
 	if err != nil {
 		log.Printf("[Warning] Unable to take old files list: %v", err)
 	}
@@ -160,10 +162,11 @@ func writeWhitelist() error {
 	}
 	defer whiteFile.Close()
 
-	majestic1M, err := majestic1MFetch()
-	if err != nil {
-		return err
-	}
+	// majestic1M, err := majestic1MFetch()
+	// if err != nil {
+	// 	return err
+	// }
+	majestic1M := []string{}
 	log.Printf("Majestic domains count is %d", len(majestic1M))
 	for _, domain := range majestic1M {
 		_, err := fmt.Fprintln(whiteFile, domain)

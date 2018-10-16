@@ -31,6 +31,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ProfitLabs/quic-dns/json-dns"
@@ -44,6 +45,7 @@ type Server struct {
 	udpClient *dns.Client
 	tcpClient *dns.Client
 	servemux  *http.ServeMux
+	listsMu   sync.RWMutex
 	whitelist map[string]bool
 	blacklist map[string]bool
 }
@@ -79,24 +81,15 @@ func NewServer(conf *config) (s *Server) {
 }
 
 func (s *Server) Start() error {
-	if s.conf.Whitelist != "" {
-		whitelist, err := parseList(s.conf.Whitelist)
-		if err != nil {
-			return fmt.Errorf("Can't read whitelist: %v", err)
-		}
-		s.whitelist = whitelist
+	err := s.readLists()
+	if err != nil {
+		return err
 	}
 
-	if s.conf.Blacklist != "" {
-		blacklist, err := parseList(s.conf.Blacklist)
-		if err != nil {
-			return fmt.Errorf("Can't read blacklist: %v", err)
-		}
-		s.blacklist = blacklist
+	err = s.startListsUpdateEndpoint()
+	if err != nil {
+		return err
 	}
-
-	log.Printf("Blacklist size: %v", len(s.blacklist))
-	log.Printf("Whitelist size: %v", len(s.whitelist))
 
 	servemux := http.Handler(s.servemux)
 	if s.conf.Verbose {
