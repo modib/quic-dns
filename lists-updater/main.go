@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/gocarina/gocsv"
 	"github.com/gofrs/flock"
@@ -22,6 +23,7 @@ func main() {
 	keepVersions := flag.Int("keep", 3, "keep N latest versions")
 	serverURL := flag.String("server-url", "", "server HTTP endpoint to update lists")
 	flag.Parse()
+
 	err := os.Chdir(*workDir)
 	if err != nil {
 		log.Fatalf("Unable to open %s: %v", *workDir, err)
@@ -35,62 +37,78 @@ func main() {
 	if !lockSuccess {
 		log.Fatalf("Unable to take a lock")
 	}
+
 	defer fileLock.Unlock()
 	log.Print("Lock file successfully taken")
 
-	err = writeWhitelist()
+	for {
+		log.Printf("The processing was started")
+		err := process(*keepVersions, *serverURL)
+		if err != nil {
+			log.Printf("Error while processing update: %v", err)
+		}
+		log.Printf("Processing is done. Sleeping for 1 hour.")
+		time.Sleep(1 * time.Hour)
+	}
+}
+
+func process(keepVersions int, serverURL string) error {
+	err := writeWhitelist()
 	if err != nil {
-		log.Fatalf("Unable to update whitelist: %v", err)
+		return fmt.Errorf("unable to update whitelist: %v", err)
 	}
 
 	err = writeBlacklist()
 	if err != nil {
-		log.Fatalf("Unable to update blacklist: %v", err)
+		return fmt.Errorf("unable to update blacklist: %v", err)
 	}
 
 	////////////
 
 	whitelistRE := regexp.MustCompile("^whitelist\\.(\\d+)\\.txt$")
-	maxWhitelistNumber, err := maxNumberForRE(*workDir, whitelistRE)
+	maxWhitelistNumber, err := maxNumberForRE(whitelistRE)
 	if err != nil {
-		log.Fatalf("Unable to find latest whitelist number: %v", err)
+		return fmt.Errorf("unable to find latest whitelist number: %v", err)
 	}
 	err = os.Rename("whitelist.new.txt", fmt.Sprintf("whitelist.%d.txt", maxWhitelistNumber+1))
 	if err != nil {
-		log.Fatalf("Unable to rename whitelist: %v", err)
+		return fmt.Errorf("unable to rename whitelist: %v", err)
 	}
 
 	blacklistRE := regexp.MustCompile("^blacklist\\.(\\d+)\\.txt$")
-	maxBlacklistNumber, err := maxNumberForRE(*workDir, blacklistRE)
+	maxBlacklistNumber, err := maxNumberForRE(blacklistRE)
 	if err != nil {
-		log.Fatalf("Unable to find latest blacklist number: %v", err)
+		return fmt.Errorf("unable to find latest blacklist number: %v", err)
 	}
 	err = os.Rename("blacklist.new.txt", fmt.Sprintf("blacklist.%d.txt", maxBlacklistNumber+1))
 	if err != nil {
-		log.Fatalf("Unable to rename blacklist: %v", err)
+		return fmt.Errorf("unable to rename blacklist: %v", err)
 	}
 
 	log.Print("Removing old files")
-	removeOld(*workDir, whitelistRE, *keepVersions)
-	removeOld(*workDir, blacklistRE, *keepVersions)
+	removeOld(whitelistRE, keepVersions)
+	removeOld(blacklistRE, keepVersions)
 	log.Print("Old files are removed")
 
-	///////
-	if *serverURL != "" {
-		resp, err := http.Post(*serverURL, "text/plain", nil)
-		if err != nil {
-			log.Fatalf("Unable to notify DOH-server: %v", err)
-		}
+	////////////
 
+	if serverURL != "" {
+		resp, err := http.Post(serverURL, "text/plain", nil)
+		if err != nil {
+			return fmt.Errorf("unable to notify DOH-server: %v", err)
+		}
 		resp.Body.Close()
+
 		if resp.StatusCode != 200 {
-			log.Fatalf("Unable to notify DOH-server: %s", resp.Status)
+			return fmt.Errorf("unable to notify DOH-server: %s", resp.Status)
 		}
 	}
+
+	return nil
 }
 
-func maxNumberForRE(workDir string, selector *regexp.Regexp) (int, error) {
-	wd, err := os.Open(workDir)
+func maxNumberForRE(selector *regexp.Regexp) (int, error) {
+	wd, err := os.Open(".")
 	if err != nil {
 		return 0, err
 	}
@@ -119,8 +137,8 @@ func maxNumberForRE(workDir string, selector *regexp.Regexp) (int, error) {
 	return maxFileNumber, nil
 }
 
-func removeOld(workDir string, selector *regexp.Regexp, keep int) {
-	wd, err := os.Open(workDir)
+func removeOld(selector *regexp.Regexp, keep int) {
+	wd, err := os.Open(".")
 	if err != nil {
 		log.Printf("[Warning] Unable to take old files list: %v", err)
 	}
@@ -275,7 +293,7 @@ type MajesticEntry struct {
 }
 
 func majestic1MFetch() ([]string, error) {
-	resp, err := http.Get("http://downloads.majestic.com/majestic_million.csv")
+	resp, err := http.Get("https://downloads.majestic.com/majestic_million.csv")
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +315,7 @@ func majestic1MFetch() ([]string, error) {
 }
 
 func openPhishFetch() ([]string, error) {
-	resp, err := http.Get("http://openphish.com/feed.txt")
+	resp, err := http.Get("https://openphish.com/feed.txt")
 	if err != nil {
 		return nil, err
 	}
