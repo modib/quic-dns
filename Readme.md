@@ -121,11 +121,6 @@ DNS-over-HTTPS uses a protocol compatible to [draft-ietf-doh-dns-over-https](htt
 This protocol is in draft stage. Any incompatibility may be introduced before
 it is finished.
 
-
-
-
-
-
 ### Filtering
 There are "whitelist", "blacklist" and "ads list".
 #### Whitelist:
