@@ -39,6 +39,9 @@ import (
 )
 
 func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNSRequest {
+	categoriesStr := r.Header.Get("X-Filter-Categories")
+	categories, _ := strconv.ParseUint(categoriesStr, 10, 64)
+
 	name := r.FormValue("name")
 	if name == "" {
 		return &DNSRequest{
@@ -163,8 +166,9 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 	msg.Extra = append(msg.Extra, opt)
 
 	return &DNSRequest{
-		request:    msg,
-		isTailored: ednsClientSubnet == "",
+		request:          msg,
+		isTailored:       ednsClientSubnet == "",
+		filterCategories: categories,
 	}
 }
 

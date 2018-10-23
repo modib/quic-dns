@@ -121,6 +121,37 @@ DNS-over-HTTPS uses a protocol compatible to [draft-ietf-doh-dns-over-https](htt
 This protocol is in draft stage. Any incompatibility may be introduced before
 it is finished.
 
+
+
+
+
+
+### Filtering
+There are "whitelist", "blacklist" and "ads list".
+#### Whitelist:
+List with domains which will be always resolved.
+
+#### Blacklist:
+List of domains which will be denied for all.
+
+#### AdsList:
+List of domains which will be denied when request will have ads filtering on
+
+The priorities is following (left to right): Ads, Whitelist, Blacklist.
+Firstly we will check Ads List, then Whitelist, then Blacklist.
+
+File names: "whitelist.5.txt", "whitelist.6.txt", "blacklist.10.txt", "blacklist.11.txt", "adslist.1.txt", "adslist.2.txt".
+
+Files format: one domain per line.
+
+When several whitelists or black lists are present the files with largest numbers will be used.
+
+
+#### Filters selecting
+Whitelist and Blacklist are on by default and can't be turned off.
+To use ads list filtering client should set HTTP seader "X-Filter-Categories" to 1.
+This header is bitmask of categories. At the moment only ads filtering bit is available. This header should be a string in decimal representation.
+
 ### Supported features
 
 Currently supported features are:

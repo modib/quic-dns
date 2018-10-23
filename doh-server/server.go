@@ -48,16 +48,18 @@ type Server struct {
 	listsMu   sync.RWMutex
 	whitelist map[string]bool
 	blacklist map[string]bool
+	adsList   map[string]bool
 }
 
 type DNSRequest struct {
-	request         *dns.Msg
-	response        *dns.Msg
-	transactionID   uint16
-	currentUpstream string
-	isTailored      bool
-	errcode         int
-	errtext         string
+	request          *dns.Msg
+	response         *dns.Msg
+	transactionID    uint16
+	currentUpstream  string
+	isTailored       bool
+	errcode          int
+	errtext          string
+	filterCategories uint64
 }
 
 func NewServer(conf *config) (s *Server) {
@@ -75,6 +77,7 @@ func NewServer(conf *config) (s *Server) {
 		servemux:  http.NewServeMux(),
 		whitelist: map[string]bool{},
 		blacklist: map[string]bool{},
+		adsList:   map[string]bool{},
 	}
 	s.servemux.HandleFunc(conf.Path, s.handlerFunc)
 	return

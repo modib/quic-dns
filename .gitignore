@@ -18,3 +18,8 @@ tmp/
 # Binaries
 doh-server/server
 doh-client/client
+
+blacklist.*.txt
+whitelist.*.txt
+adslist.*.txt
+lockfile

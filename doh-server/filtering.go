@@ -16,6 +16,8 @@ import (
 	"github.com/miekg/dns"
 )
 
+const CategoryAds = uint64(1)
+
 func parseList(filepath string) (map[string]bool, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -70,7 +72,7 @@ func (s *Server) postLookup(resp *DNSRequest) {
 
 	answer := make([]dns.RR, 0)
 	for _, rr := range resp.response.Answer {
-		if s.isRestricted(rr.Header().Name) {
+		if s.isRestricted(rr.Header().Name, resp.filterCategories) {
 			// Drop this RR from answer
 			// fmt.Printf("Dropping RR: %v\n", rr)
 			continue
@@ -81,7 +83,7 @@ func (s *Server) postLookup(resp *DNSRequest) {
 
 	additional := make([]dns.RR, 0)
 	for _, rr := range resp.response.Extra {
-		if s.isRestricted(rr.Header().Name) {
+		if s.isRestricted(rr.Header().Name, resp.filterCategories) {
 			// Drop this RR from additional
 			// fmt.Printf("Dropping RR: %v\n", rr)
 			continue
@@ -96,10 +98,14 @@ func (s *Server) postLookup(resp *DNSRequest) {
 	resp.response.Ns = []dns.RR{}
 }
 
-func (s *Server) isRestricted(domain string) bool {
+func (s *Server) isRestricted(domain string, categories uint64) bool {
 	normalized := strings.ToLower(dns.Fqdn(domain))
 	s.listsMu.RLock()
 	defer s.listsMu.RUnlock()
+
+	if categories&CategoryAds != 0 && s.adsList[normalized] {
+		return true
+	}
 
 	if s.whitelist[normalized] {
 		return false
@@ -130,9 +136,19 @@ func (s *Server) readLists() error {
 	s.blacklist = blacklist
 	s.listsMu.Unlock()
 
+	adsRE := regexp.MustCompile("^adslist\\.(\\d+)\\.txt$")
+	adsList, err := readList(s.conf.ListsDirectory, adsRE)
+	if err != nil {
+		return fmt.Errorf("Can't read ads list: %v", err)
+	}
+	s.listsMu.Lock()
+	s.adsList = adsList
+	s.listsMu.Unlock()
+
 	s.listsMu.RLock()
 	log.Printf("Blacklist size: %v", len(s.blacklist))
 	log.Printf("Whitelist size: %v", len(s.whitelist))
+	log.Printf("Ads list size: %v", len(s.adsList))
 	s.listsMu.RUnlock()
 
 	return nil
