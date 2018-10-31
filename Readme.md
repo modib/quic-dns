@@ -148,7 +148,7 @@ To use ads list filtering client should set HTTP seader "X-Filter-Categories" to
 This header is bitmask of categories. At the moment only ads filtering bit is available. This header should be a string in decimal representation.
 
 ### Statistics
-Collected domains. Server respect Do-Not-Track header. So if `DNT: 1` header is
+Server respect Do-Not-Track header. So if `DNT: 1` header is
 added to HTTP request the server won't track anyting. Otherwise domains will be
 collected to `requests_log` file (can be changed in the config).
 
