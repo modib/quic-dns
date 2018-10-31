@@ -23,3 +23,4 @@ blacklist.*.txt
 whitelist.*.txt
 adslist.*.txt
 lockfile
+*.log

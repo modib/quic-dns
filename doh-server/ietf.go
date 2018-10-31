@@ -66,6 +66,13 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 	categoriesStr := r.Header.Get("X-Filter-Categories")
 	categories, _ := strconv.ParseUint(categoriesStr, 10, 64)
 
+	dntHeader := r.Header.Get("DNT")
+	dnt := false
+	splitted := strings.Split(dntHeader, " ")
+	if len(splitted) > 0 {
+		dnt = splitted[0] == "1"
+	}
+
 	if s.patchDNSCryptProxyReqID(w, r, requestBinary) {
 		return &DNSRequest{
 			errcode: 444,
@@ -146,6 +153,7 @@ func (s *Server) parseRequestIETF(w http.ResponseWriter, r *http.Request) *DNSRe
 		transactionID:    transactionID,
 		isTailored:       isTailored,
 		filterCategories: categories,
+		dnt:              dnt,
 	}
 }
 

@@ -41,6 +41,7 @@ type config struct {
 	Verbose             bool     `toml:"verbose"`
 	ListsDirectory      string   `toml:"lists_directory"`
 	ListsUpdateEndpoint string   `toml:"lists_update_endpoint"`
+	RequestsLog         string   `toml:"requests_log"`
 }
 
 func loadConfig(path string) (*config, error) {

@@ -98,16 +98,17 @@ func googleReqIETFResp(baseURL string, client *http.Client, name string) {
 func ietfGetReqResp(baseURL string, client *http.Client, name string) {
 	fmt.Println("\n\n=====================\nietfGetReqResp\n=====================")
 	dnsQuestion := new(dns.Msg)
-	dnsQuestion.SetQuestion(dns.Fqdn(name), dns.TypeA)
+	dnsQuestion.SetQuestion(dns.Fqdn("reg.ru"), dns.TypeA)
 	questionBody, err := dnsQuestion.Pack()
 	addr := baseURL + "?dns=" + base64.RawURLEncoding.EncodeToString(questionBody)
 	log.Printf("GET %s", addr)
 
 	req, err := http.NewRequest("GET", addr, nil)
-	req.Header.Add("Accept", "application/dns-message")
 	if err != nil {
 		panic(err)
 	}
+	req.Header.Add("Accept", "application/dns-message")
+	req.Header.Add("DNT", "1")
 
 	rsp, err := client.Do(req)
 	if err != nil {

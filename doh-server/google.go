@@ -42,6 +42,13 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 	categoriesStr := r.Header.Get("X-Filter-Categories")
 	categories, _ := strconv.ParseUint(categoriesStr, 10, 64)
 
+	dntHeader := r.Header.Get("DNT")
+	dnt := false
+	splitted := strings.Split(dntHeader, " ")
+	if len(splitted) > 0 {
+		dnt = splitted[0] == "1"
+	}
+
 	name := r.FormValue("name")
 	if name == "" {
 		return &DNSRequest{
@@ -169,6 +176,7 @@ func (s *Server) parseRequestGoogle(w http.ResponseWriter, r *http.Request) *DNS
 		request:          msg,
 		isTailored:       ednsClientSubnet == "",
 		filterCategories: categories,
+		dnt:              dnt,
 	}
 }
 

@@ -49,6 +49,7 @@ type Server struct {
 	whitelist map[string]bool
 	blacklist map[string]bool
 	adsList   map[string]bool
+	tracker   *Tracker
 }
 
 type DNSRequest struct {
@@ -60,6 +61,7 @@ type DNSRequest struct {
 	errcode          int
 	errtext          string
 	filterCategories uint64
+	dnt              bool
 }
 
 func NewServer(conf *config) (s *Server) {
@@ -92,6 +94,15 @@ func (s *Server) Start() error {
 	err = s.startListsUpdateEndpoint()
 	if err != nil {
 		return err
+	}
+
+	if s.conf.RequestsLog != "" {
+		tracker, err := NewTracker(s.conf.RequestsLog)
+		if err != nil {
+			return err
+		}
+		s.tracker = tracker
+		s.tracker.Start()
 	}
 
 	servemux := http.Handler(s.servemux)
@@ -196,6 +207,9 @@ func (s *Server) handlerFunc(w http.ResponseWriter, r *http.Request) {
 	if req.errcode != 0 {
 		jsonDNS.FormatError(w, req.errtext, req.errcode)
 		return
+	}
+	if s.tracker != nil && !req.dnt {
+		s.tracker.SaveDomain(req.request.Question[0].Name)
 	}
 
 	var err error
